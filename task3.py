@@ -1,13 +1,6 @@
-import string
 from itertools import groupby
-
-
-def map_function(key, value):
-    return key, value
-
-
-def reduce_function(key, list_of_values):
-    return key, sum(list_of_values)
+import multiprocessing
+import queue
 
 
 def group_mappings(list_of_mappings):
@@ -25,39 +18,101 @@ def group_mappings(list_of_mappings):
 
 
 def map_reduce(map_func, reduce_func, num_workers):
-    file_list = input("File list: ")
-    list_of_mappings = []
+    def map_function(process_name, tasks, results):
+        print('[%s] evaluation routine starts' % process_name)
 
-    for file in file_list:
-        with open(file) as curr_file:
-            lines = curr_file.readlines()
+        while True:
+            try:
+                word = tasks.get()
+            except queue.Empty:
+                results.put(-1)
+                break
+            else:
+                results.put(map_func(word[0], word[1]))
 
-            for line in lines:
-                curr_line = line.lower().translate(str.maketrans('', '', string.punctuation)).split(" ")
+        return
 
-                for word in curr_line:
-                    list_of_mappings.append(map_func(word, 1))
+    def reduce_function(process_name, tasks, results):
+        print('[%s] evaluation routine starts' % process_name)
 
-    list_of_mappings = sorted(list_of_mappings, key=lambda item: item[0])
+        while True:
+            try:
+                map_object = tasks.get()
+            except queue.Empty:
+                results.put(-1)
+                break
+            else:
+                results.put(reduce_func(map_object[0], sum(map_object[1])))
 
-    grouped_mapings = group_mappings(list_of_mappings)
+        return
 
-    return reduce_func(grouped_mapings)
-
-
-def map_reduce(map_func, reduce_func, num_workers):
     def map_reduce_func(word_list):
         list_of_mappings = []
 
-        for word in word_list:
-            list_of_mappings.append(map_func(word, 1))
+        if __name__ == "__main__":
+            manager = multiprocessing.Manager()
+            tasks = manager.Queue()
+            results = manager.Queue()
+            pool = multiprocessing.Pool(processes=num_workers)
+            processes = []
+
+            for i in range(num_workers):
+                process_name = 'P%i' % i
+                new_process = multiprocessing.Process(target=map_function, args=(process_name, tasks, results))
+                processes.append(new_process)
+                new_process.start()
+
+            for word in word_list:
+                tasks.put((word, 1))
+
+            num_finished_processes = 0
+
+            while True:
+                new_result = results.get()
+
+                if new_result == -1:
+                    num_finished_processes += 1
+
+                    if num_finished_processes == num_workers:
+                        break
+                else:
+                    list_of_mappings.append(new_result)
 
         list_of_mappings = sorted(list_of_mappings, key=lambda item: item[0])
         grouped_mapings = group_mappings(list_of_mappings)
         mapped_and_reduced = []
 
-        for mapping in grouped_mapings:
-            mapped_and_reduced.append(reduce_func(mapping))
+        if __name__ == "__main__":
+            manager = multiprocessing.Manager()
+            tasks = manager.Queue()
+            results = manager.Queue()
+            pool = multiprocessing.Pool(processes=num_workers)
+            processes = []
+
+            for i in range(num_workers):
+                process_name = 'P%i' % i
+                new_process = multiprocessing.Process(target=reduce_function, args=(process_name, tasks, results))
+                processes.append(new_process)
+                new_process.start()
+
+            for word in word_list:
+                tasks.put((word, 1))
+
+            for mapping in grouped_mapings:
+                tasks.put(mapping)
+
+            num_finished_processes = 0
+
+            while True:
+                new_result = results.get()
+
+                if new_result == -1:
+                    num_finished_processes += 1
+
+                    if num_finished_processes == num_workers:
+                        break
+                else:
+                    list_of_mappings.append(new_result)
 
         return mapped_and_reduced
 
