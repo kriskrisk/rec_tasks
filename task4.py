@@ -1,17 +1,21 @@
-from task3 import map_reduce
+"""Implementation of solution of fourth task."""
 import sys
 import string
+from task3 import map_reduce
 
 
 def map_function(key, value):
+    """Maps a key to a value."""
     return key, value
 
 
 def reduce_function(key, list_of_values):
+    """Summs list of values."""
     return key, sum(list_of_values)
 
 
 def main():
+    """Main function."""
     word_list = []
 
     for file in sys.argv[1:]:
@@ -19,7 +23,9 @@ def main():
             lines = curr_file.readlines()
 
             for line in lines:
-                curr_line = line.lower().translate(str.maketrans('', '', string.punctuation)).split(" ")
+                curr_line = line.lower().translate(str.maketrans('',
+                                                                 '',
+                                                                 string.punctuation)).split(" ")
 
                 for word in curr_line:
                     word_list.append(word)

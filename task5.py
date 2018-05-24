@@ -1,12 +1,14 @@
+"""Implementation of solution of fifth task."""
 import logging
 
 
 def process(retries):
+    """Gets data from source and does work on it."""
     timeout = 3
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
 
-    for i in range(retries):
+    for _ in range(retries):
         my_connection = connect()
 
         if my_connection is not None:

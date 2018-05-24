@@ -1,9 +1,10 @@
+"""Implementation of solution of third task."""
 from itertools import groupby
 import multiprocessing
-import queue
 
 
 def group_mappings(list_of_mappings):
+    """Returns list of mappings grouped by key."""
     grouped_mappings = []
 
     for key, group in groupby(list_of_mappings, lambda x: x[0]):
@@ -18,24 +19,9 @@ def group_mappings(list_of_mappings):
 
 
 def map_reduce(map_func, reduce_func, num_workers):
-    def map_function(process_name, tasks, results):
-        print('[%s] evaluation routine starts' % process_name)
-
-        # while True:
-        #     try:
-        #         word = tasks.get()
-        #     except queue.Empty:
-        #         results.put(-1)
-        #         break
-        #     else:
-        #         results.put(map_func(word[0], word[1]))
-
-        # while not tasks.empty():
-        #     word = tasks.get()
-        #     results.put(map_func(word[0], word[1]))
-        #
-        # results.put(-1)
-
+    """Returns function which implements MapReduce."""
+    def map_function(tasks, results):
+        """Calls map_func."""
         while True:
             word = tasks.get()
             if word == -1:
@@ -47,24 +33,8 @@ def map_reduce(map_func, reduce_func, num_workers):
 
         return
 
-    def reduce_function(process_name, tasks, results):
-        print('[%s] evaluation routine starts' % process_name)
-
-        # while True:
-        #     try:
-        #         map_object = tasks.get()
-        #     except queue.Empty:
-        #         results.put(-1)
-        #         break
-        #     else:
-        #         results.put(reduce_func(map_object[0], sum(map_object[1])))
-
-        # while not tasks.empty():
-        #     map_object = tasks.get()
-        #     results.put(reduce_func(map_object[0], sum(map_object[1])))
-        #
-        # results.put(-1)
-
+    def reduce_function(tasks, results):
+        """Calls reduce_func."""
         while True:
             map_object = tasks.get()
             if map_object == -1:
@@ -77,6 +47,7 @@ def map_reduce(map_func, reduce_func, num_workers):
         return
 
     def map_reduce_func(word_list):
+        """Implementation of MapReduce."""
         list_of_mappings = []
 
         if __name__ == "task3":
@@ -86,9 +57,8 @@ def map_reduce(map_func, reduce_func, num_workers):
             pool = multiprocessing.Pool(processes=num_workers)
             processes = []
 
-            for i in range(num_workers):
-                process_name = 'P%i' % i
-                new_process = multiprocessing.Process(target=map_function, args=(process_name, tasks, results))
+            for _ in range(num_workers):
+                new_process = multiprocessing.Process(target=map_function, args=(tasks, results))
                 processes.append(new_process)
                 new_process.start()
 
@@ -97,7 +67,7 @@ def map_reduce(map_func, reduce_func, num_workers):
 
             num_finished_processes = 0
 
-            for i in range(num_workers):
+            for _ in range(num_workers):
                 tasks.put(-1)
 
             while True:
@@ -123,9 +93,8 @@ def map_reduce(map_func, reduce_func, num_workers):
             pool = multiprocessing.Pool(processes=num_workers)
             processes = []
 
-            for i in range(num_workers):
-                process_name = 'P%i' % i
-                new_process = multiprocessing.Process(target=reduce_function, args=(process_name, tasks, results))
+            for _ in range(num_workers):
+                new_process = multiprocessing.Process(target=reduce_function, args=(tasks, results))
                 processes.append(new_process)
                 new_process.start()
 
@@ -134,7 +103,7 @@ def map_reduce(map_func, reduce_func, num_workers):
 
             num_finished_processes = 0
 
-            for i in range(num_workers):
+            for _ in range(num_workers):
                 tasks.put(-1)
 
             while True:
