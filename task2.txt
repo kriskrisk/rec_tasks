@@ -6,7 +6,7 @@ Obliczenia numeryczne:
    macierzach) użyłbym biblioteki numpy.
 
 Parsowanie plików CSV:
--> Gdybym potrzebaował danych z pliku CSV w postaci sekwencji na których wygodnie się pracuje użyłbym binlioteki
+-> Gdybym potrzebował danych z pliku CSV w postaci sekwencji na których wygodnie się pracuje użyłbym binlioteki
    pandas. Alternatywą do prostych operacji jest biblioteka csv.
 
 Parsowanie plików JSON:
